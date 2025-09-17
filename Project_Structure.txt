@@ -1,0 +1,13 @@
+agentic_stock_ai_agentic/
+│
+├── app.py             # Streamlit interface
+├── agent.py           # Autonomous agent logic
+├── data_fetch.py      # Fetch stock data & convert company names
+├── analysis.py        # Screening & ranking
+├── planner.py         # Gemini integration
+├── memory.py          # Watchlist persistence
+├── alerts.py          # Email alerts
+├── scheduler.py       # Background scheduler for automated scans
+├── config.py          # Secrets and thresholds
+├── requirements.txt
+└── .gitignore
