@@ -9,7 +9,6 @@ import streamlit as st
 def run_agentic_scan(company_names=None, send_email_flag=False):
     symbols = []
 
-    # Convert company names to symbols
     if company_names:
         for name in company_names:
             symbol = company_name_to_symbol(name)
@@ -18,8 +17,7 @@ def run_agentic_scan(company_names=None, send_email_flag=False):
             else:
                 st.warning(f"Could not find symbol for: {name}")
     else:
-        # Default companies if none provided
-        symbols = ['AAPL', 'MSFT', 'TSLA', 'GOOGL', 'AMZN']
+        symbols = ['AAPL','MSFT','TSLA','GOOGL','AMZN']
 
     all_stocks_data = []
     for symbol in symbols:
@@ -35,6 +33,6 @@ def run_agentic_scan(company_names=None, send_email_flag=False):
     update_watchlist(top_stocks)
 
     if send_email_flag and top_stocks:
-        send_email(top_stocks, config.TO_EMAIL, config.FROM_EMAIL, config.EMAIL_PASSWORD)
+        send_email(top_stocks)
 
     return top_stocks

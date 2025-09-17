@@ -1,8 +1,13 @@
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+import config
 
-def send_email(stock_list, to_email, from_email, password):
+def send_email(stock_list, to_email=config.TO_EMAIL, from_email=config.FROM_EMAIL, password=config.EMAIL_PASSWORD):
+    if not (from_email and password and to_email):
+        print("Dummy email mode: skipping email send.")
+        return False
+
     message = MIMEMultipart()
     message['From'] = from_email
     message['To'] = to_email
@@ -10,13 +15,7 @@ def send_email(stock_list, to_email, from_email, password):
 
     body = ""
     for s in stock_list:
-        # Ensure any special characters are handled
-        symbol = str(s['symbol'])
-        price = str(s['price'])
-        roe = str(s['roe'])
-        peg = str(s['peg_ratio'])
-        explanation = s.get('explanation', 'N/A')
-        body += f"{symbol}: Price={price}, ROE={roe}, PEG={peg}\nRecommendation: {explanation}\n\n"
+        body += f"{s['symbol']}: Price={s['price']}, ROE={s['roe']}, PEG={s['peg_ratio']}\nRecommendation: {s.get('explanation','N/A')}\n\n"
 
     message.attach(MIMEText(body, 'plain', 'utf-8'))
 

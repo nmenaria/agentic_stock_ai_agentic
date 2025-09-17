@@ -3,7 +3,7 @@ from agent import run_agentic_scan
 from memory import load_watchlist
 
 st.set_page_config(page_title="Agentic Stock AI", layout="wide")
-st.title("Agentic Stock AI – Company Name Input & Fully Agentic")
+st.title("Agentic Stock AI – Company Name Input & Agentic AI")
 
 st.write("Enter company names separated by commas (e.g., Apple, Microsoft, Tesla):")
 companies_input = st.text_input("Company Names")
@@ -15,7 +15,7 @@ if st.button("Run Analysis"):
     else:
         company_names = None
 
-    top_stocks = run_agentic_scan(company_names, send_email_flag=False)
+    top_stocks = run_agentic_scan(company_names, send_email_flag=send_email_flag)
 
     if not top_stocks:
         st.warning("No stocks passed the screening thresholds.")

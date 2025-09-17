@@ -9,7 +9,6 @@ def load_watchlist():
             try:
                 return json.load(f)
             except UnicodeDecodeError:
-                # fallback if file has non-UTF8 characters
                 with open(WATCHLIST_FILE, 'r', encoding='cp1252') as f2:
                     return json.load(f2)
     return {}

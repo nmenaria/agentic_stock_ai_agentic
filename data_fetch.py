@@ -1,16 +1,17 @@
 import yfinance as yf
+from yahooquery import search
 
-def company_name_to_symbol(company_name):
+def company_name_to_symbol(name):
     """
-    Convert company name to ticker symbol using yfinance search.
-    Returns the first match if found, else None.
+    Dynamically convert company name to ticker symbol using yahooquery search API.
     """
     try:
-        search_results = yf.utils.get_yf_tickers(company_name)
-        if search_results:
-            return search_results[0]
+        result = search(name)
+        quotes = result.get('quotes')
+        if quotes:
+            return quotes[0]['symbol']  # take first match
     except Exception as e:
-        print(f"Error converting company name to symbol: {str(e)}")
+        print(f"Error fetching symbol for {name}: {e}")
     return None
 
 def get_stock_data(symbol):
