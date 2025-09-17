@@ -3,7 +3,7 @@ from agent import run_agentic_scan
 from memory import load_watchlist
 
 st.set_page_config(page_title="Agentic Stock AI", layout="wide")
-st.title("Agentic Stock AI – Company Name Input & Fully Agentic")
+st.title("Agentic Stock AI â€“ Company Name Input & Fully Agentic")
 
 st.write("Enter company names separated by commas (e.g., Apple, Microsoft, Tesla):")
 companies_input = st.text_input("Company Names")
