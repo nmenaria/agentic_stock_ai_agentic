@@ -15,7 +15,7 @@ if st.button("Run Analysis"):
     else:
         company_names = None
 
-    top_stocks = run_agentic_scan(company_names, send_email_flag=send_email_flag)
+    top_stocks = run_agentic_scan(company_names, send_email_flag=False)
 
     if not top_stocks:
         st.warning("No stocks passed the screening thresholds.")
