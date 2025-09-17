@@ -10,9 +10,15 @@ def send_email(stock_list, to_email, from_email, password):
 
     body = ""
     for s in stock_list:
-        body += f"{s['symbol']}: Price={s['price']}, ROE={s['roe']}, PEG={s['peg_ratio']}\nRecommendation: {s.get('explanation','N/A')}\n\n"
+        # Ensure any special characters are handled
+        symbol = str(s['symbol'])
+        price = str(s['price'])
+        roe = str(s['roe'])
+        peg = str(s['peg_ratio'])
+        explanation = s.get('explanation', 'N/A')
+        body += f"{symbol}: Price={price}, ROE={roe}, PEG={peg}\nRecommendation: {explanation}\n\n"
 
-    message.attach(MIMEText(body, 'plain'))
+    message.attach(MIMEText(body, 'plain', 'utf-8'))
 
     try:
         with smtplib.SMTP('smtp.gmail.com', 587) as server:

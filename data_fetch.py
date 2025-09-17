@@ -10,7 +10,7 @@ def company_name_to_symbol(company_name):
         if search_results:
             return search_results[0]
     except Exception as e:
-        print(f"Error converting company name to symbol: {e}")
+        print(f"Error converting company name to symbol: {str(e)}")
     return None
 
 def get_stock_data(symbol):

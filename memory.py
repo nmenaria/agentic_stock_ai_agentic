@@ -5,11 +5,11 @@ WATCHLIST_FILE = 'watchlist.json'
 
 def load_watchlist():
     if os.path.exists(WATCHLIST_FILE):
-        with open(WATCHLIST_FILE, 'r', encoding='utf-8') as f:  # specify UTF-8
+        with open(WATCHLIST_FILE, 'r', encoding='utf-8') as f:
             try:
                 return json.load(f)
             except UnicodeDecodeError:
-                # If UTF-8 fails, try cp1252
+                # fallback if file has non-UTF8 characters
                 with open(WATCHLIST_FILE, 'r', encoding='cp1252') as f2:
                     return json.load(f2)
     return {}
