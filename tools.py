@@ -1,4 +1,3 @@
-# tools.py
 from yahooquery import search, Ticker
 import json, os
 
@@ -54,7 +53,7 @@ def get_symbol(company_name: str) -> str:
 
 def get_fundamentals(symbol: str) -> dict:
     t = Ticker(symbol)
-    key_stats = t.key_stats[symbol]
+    key_stats = t.key_stats.get(symbol, {})
     return {
         'symbol': symbol,
         'roe': key_stats.get('returnOnEquity'),
