@@ -1,7 +1,7 @@
 # agentic_app.py
 import os
 from langchain.agents import initialize_agent, Tool
-from langchain.chat_models import ChatGoogleGenerativeAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 from tools import (
     get_symbol,
     get_fundamentals,
