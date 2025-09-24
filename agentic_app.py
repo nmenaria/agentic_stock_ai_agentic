@@ -11,15 +11,26 @@ from tools import (
     set_thresholds
 )
 
-# Set your Gemini API key as an environment variable or Streamlit secret
+# Gemini API key (set in Streamlit secrets or environment variable)
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
 llm = ChatGoogleGenerativeAI(
-    model="gemini-1.5-flash",      # adjust if you have 1.0/1.5/2.0 enabled
+    model="gemini-1.5-flash",  # adjust if needed
     google_api_key=GEMINI_API_KEY,
     temperature=0
 )
 
+# ----- safe function to replace lambda -----
+def safe_set_thresholds(user_input: str):
+    try:
+        roe_str, peg_str = user_input.split(",")
+        roe = float(roe_str.strip())
+        peg = float(peg_str.strip())
+        return set_thresholds(roe, peg)
+    except Exception as e:
+        return f"Error setting thresholds: {e}"
+
+# ----- tools -----
 tools = [
     Tool(name="Get Symbol", func=get_symbol,
          description="Find a stock ticker symbol from a company name."),
@@ -33,8 +44,7 @@ tools = [
          description="Automatically screen a company by saved thresholds and add to watchlist if it passes."),
     Tool(name="Get Thresholds", func=get_thresholds,
          description="Show the current screening thresholds (ROE and PEG)."),
-    Tool(name="Set Thresholds",
-         func=lambda x: set_thresholds(*map(float, x.split(","))),
+    Tool(name="Set Thresholds", func=safe_set_thresholds,
          description="Update screening thresholds. Input format: 'ROE,PEG' (e.g. '20,1.5').")
 ]
 

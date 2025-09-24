@@ -6,9 +6,9 @@ THRESHOLDS_FILE = "thresholds.json"
 
 # ----- helpers -----
 def _load_json(file, default):
-    if not os.path.exists(file):
-        return default
     try:
+        if not os.path.exists(file):
+            return default
         with open(file, "r", encoding="utf-8") as f:
             return json.load(f)
     except Exception:
@@ -85,7 +85,7 @@ def screen_and_add(company_name: str):
     try:
         symbol = get_symbol(company_name)
         if not symbol or "Error" in symbol or "Could not find" in symbol:
-            return symbol  # return the error string
+            return symbol  # return error string
 
         fundamentals = get_fundamentals(symbol)
         if "error" in fundamentals:
