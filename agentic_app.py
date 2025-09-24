@@ -11,7 +11,7 @@ from tools import (
     set_thresholds
 )
 
-# Gemini API key (set in Streamlit secrets or environment variable)
+# ----- Gemini API key (set in Streamlit secrets or environment variable) -----
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
 llm = ChatGoogleGenerativeAI(
@@ -20,7 +20,7 @@ llm = ChatGoogleGenerativeAI(
     temperature=0
 )
 
-# ----- safe function to replace lambda -----
+# ----- safe function to replace lambda for thresholds -----
 def safe_set_thresholds(user_input: str):
     try:
         roe_str, peg_str = user_input.split(",")
@@ -48,13 +48,17 @@ tools = [
          description="Update screening thresholds. Input format: 'ROE,PEG' (e.g. '20,1.5').")
 ]
 
+# ----- initialize agent with higher iteration limit and optional timeout -----
 agent = initialize_agent(
     tools,
     llm,
     agent="zero-shot-react-description",
-    verbose=True
+    verbose=True,
+    max_iterations=30,           # increase from default 15
+    max_execution_time=60        # optional: timeout per chain step in seconds
 )
 
+# ----- test run -----
 if __name__ == "__main__":
-    question = "Screen Tesla and Apple and show watchlist."
+    question = "Screen Tesla, Apple, and Microsoft and show watchlist."
     print(agent.run(question))
