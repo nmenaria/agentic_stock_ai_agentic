@@ -1,64 +1,90 @@
-import os
-from langchain.agents import initialize_agent, Tool
+# agentic_app.py
+import time
+import streamlit as st
+from langchain.tools import Tool
+from langchain.agents import initialize_agent, AgentType
 from langchain_google_genai import ChatGoogleGenerativeAI
-from tools import (
-    get_symbol,
-    get_fundamentals,
-    add_to_watchlist,
-    show_watchlist,
-    screen_and_add,
-    get_thresholds,
-    set_thresholds
-)
+from google.api_core.exceptions import ResourceExhausted
 
-# ----- Gemini API key (set in Streamlit secrets or environment variable) -----
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+# import your tools (safe version)
+import tools  # this is your tools.py
 
-llm = ChatGoogleGenerativeAI(
-    model="gemini-1.5-flash",  # adjust if needed
-    google_api_key=GEMINI_API_KEY,
-    temperature=0
-)
+# --- Settings ---
+MAX_ITERATIONS = 5       # fewer steps reduces Gemini calls
+AGENT_TIMEOUT = 120      # seconds
+MODEL_NAME = "gemini-1.5-flash"  # free tier model
+TEMPERATURE = 0.3
 
-# ----- safe function to replace lambda for thresholds -----
-def safe_set_thresholds(user_input: str):
-    try:
-        roe_str, peg_str = user_input.split(",")
-        roe = float(roe_str.strip())
-        peg = float(peg_str.strip())
-        return set_thresholds(roe, peg)
-    except Exception as e:
-        return f"Error setting thresholds: {e}"
+# --- Gemini wrapper with retry/backoff ---
+class SafeGeminiLLM:
+    def __init__(self, model_name=MODEL_NAME, temperature=TEMPERATURE, max_retries=3, backoff=30):
+        self.llm = ChatGoogleGenerativeAI(model=model_name, temperature=temperature)
+        self.max_retries = max_retries
+        self.backoff = backoff
 
-# ----- tools -----
-tools = [
-    Tool(name="Get Symbol", func=get_symbol,
-         description="Find a stock ticker symbol from a company name."),
-    Tool(name="Get Fundamentals", func=get_fundamentals,
-         description="Fetch ROE and PEG for a given stock ticker symbol."),
-    Tool(name="Add To Watchlist", func=add_to_watchlist,
-         description="Add a stock symbol to the persistent watchlist."),
-    Tool(name="Show Watchlist", func=show_watchlist,
-         description="Show the current persistent watchlist."),
-    Tool(name="Screen And Add", func=screen_and_add,
-         description="Automatically screen a company by saved thresholds and add to watchlist if it passes."),
-    Tool(name="Get Thresholds", func=get_thresholds,
-         description="Show the current screening thresholds (ROE and PEG)."),
-    Tool(name="Set Thresholds", func=safe_set_thresholds,
-         description="Update screening thresholds. Input format: 'ROE,PEG' (e.g. '20,1.5').")
+    def __call__(self, *args, **kwargs):
+        for attempt in range(self.max_retries):
+            try:
+                return self.llm(*args, **kwargs)
+            except ResourceExhausted as e:
+                wait = getattr(e, "retry_delay", None)
+                if wait and hasattr(wait, "seconds"):
+                    wait_time = wait.seconds
+                else:
+                    wait_time = self.backoff
+                st.warning(f"Gemini quota exceeded. Waiting {wait_time}s before retry...")
+                time.sleep(wait_time)
+        raise RuntimeError("Gemini API quota exceeded repeatedly; try again later.")
+
+# instantiate safe LLM
+safe_llm = SafeGeminiLLM()
+
+# --- Define Tools ---
+tools_list = [
+    Tool(
+        name="Add to Watchlist",
+        func=tools.add_to_watchlist,
+        description="Add a stock symbol to the watchlist."
+    ),
+    Tool(
+        name="Show Watchlist",
+        func=lambda _: tools.show_watchlist(),
+        description="Show the current watchlist."
+    ),
+    Tool(
+        name="Set Thresholds",
+        func=lambda s: tools.set_thresholds(*map(float, s.split())),
+        description="Update thresholds. Input: 'ROE PEG'"
+    ),
+    Tool(
+        name="Screen Company",
+        func=tools.screen_and_add,
+        description="Screen a company name against thresholds and add if passes."
+    ),
 ]
 
-# ----- initialize agent with higher iteration limit and optional timeout -----
+# --- Create Agent ---
 agent = initialize_agent(
-    tools,
-    llm,
-    agent="zero-shot-react-description",
+    tools_list,
+    safe_llm,  # safe LLM
+    agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
     verbose=True,
-    max_iterations=30,           # increase from default 15
-    max_execution_time=60        # optional: timeout per chain step in seconds
+    max_iterations=MAX_ITERATIONS,
+    handle_parsing_errors=True,
 )
 
-# ----- test run -----
-if __name__ == "__main__":
-    question = "Screen Tesla, Apple, and Microsoft and show watchlist."
-    print(agent.run(question))
+# --- Streamlit UI ---
+st.title("Agentic Stock AI")
+
+user_query = st.text_input("Ask the agent (e.g. 'screen Apple Inc.'):")
+
+if user_query:
+    try:
+        # run the agent with timeout
+        start = time.time()
+        result = agent.run(user_query)
+        elapsed = time.time() - start
+        st.success(f"✅ Agent finished in {elapsed:.1f}s")
+        st.write(result)
+    except Exception as e:
+        st.error(f"Agent error: {e}")
