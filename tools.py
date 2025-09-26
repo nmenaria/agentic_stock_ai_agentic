@@ -21,6 +21,87 @@ def _save_json(file, data):
     except Exception as e:
         print(f"Error saving {file}: {e}")
 
+
+# Helper function to determine market information
+def _get_market_info(symbol: str) -> dict:
+    """Determine market, currency, and currency symbol based on stock symbol"""
+    if '.NS' in symbol or '.BO' in symbol:  # Indian markets (NSE or BSE)
+        return {
+            'market': 'NSE' if '.NS' in symbol else 'BSE',
+            'currency': 'INR',
+            'currency_symbol': '₹'
+        }
+    elif '.TO' in symbol:  # Toronto Stock Exchange
+        return {
+            'market': 'TSX',
+            'currency': 'CAD',
+            'currency_symbol': 'C$'
+        }
+    elif '.L' in symbol:  # London Stock Exchange
+        return {
+            'market': 'LSE',
+            'currency': 'GBP',
+            'currency_symbol': '£'
+        }
+    elif '.AX' in symbol:  # Australian Stock Exchange
+        return {
+            'market': 'ASX',
+            'currency': 'AUD',
+            'currency_symbol': 'A$'
+        }
+    else:  # Default to US markets
+        return {
+            'market': 'US (NASDAQ/NYSE)',
+            'currency': 'USD',
+            'currency_symbol': '$'
+        }
+
+
+# Helper functions for formatting
+def _format_number(value, decimal_places=2):
+    """Format a number with specified decimal places"""
+    if value is None or (isinstance(value, (int, float)) and (value != value or value == float('inf'))):  # Check for None or NaN
+        return "N/A"
+    try:
+        return f"{float(value):.{decimal_places}f}"
+    except (ValueError, TypeError):
+        return "N/A"
+
+
+def _format_percentage(value):
+    """Format a value as a percentage"""
+    if value is None or (isinstance(value, (int, float)) and (value != value or value == float('inf'))):
+        return "N/A"
+    try:
+        # If the value is already in percentage form (> 1), use it directly
+        # If it's in decimal form (< 1), convert to percentage
+        if float(value) < 1:
+            return f"{float(value) * 100:.2f}%"
+        else:
+            return f"{float(value):.2f}%"
+    except (ValueError, TypeError):
+        return "N/A"
+
+
+def _format_large_number(value):
+    """Format large numbers with B, M, K suffixes"""
+    if value is None or (isinstance(value, (int, float)) and (value != value or value == float('inf'))):
+        return "N/A"
+    try:
+        value = float(value)
+        if abs(value) >= 1e12:
+            return f"${value/1e12:.2f}T"
+        elif abs(value) >= 1e9:
+            return f"${value/1e9:.2f}B"
+        elif abs(value) >= 1e6:
+            return f"${value/1e6:.2f}M"
+        elif abs(value) >= 1e3:
+            return f"${value/1e3:.2f}K"
+        else:
+            return f"${value:.2f}"
+    except (ValueError, TypeError):
+        return "N/A"
+
 # ----- watchlist -----
 def _load_watchlist():
     return _load_json(WATCHLIST_FILE, [])
@@ -81,6 +162,144 @@ def set_thresholds(roe: float, peg: float):
 
 # ----- data -----
 def get_symbol(company_name: str) -> str:
+    """
+    Search for a stock symbol based on company name.
+    Enhanced with Indian market companies and both NSE/ADR options.
+    """
+    
+    # Enhanced mapping of common companies to their symbols (including Indian companies)
+    COMMON_STOCKS = {
+        # US Companies
+        'apple': 'AAPL',
+        'microsoft': 'MSFT',
+        'amazon': 'AMZN',
+        'netflix': 'NFLX',
+        'google': 'GOOGL',
+        'alphabet': 'GOOGL',
+        'tesla': 'TSLA',
+        'meta': 'META',
+        'facebook': 'META',
+        'nvidia': 'NVDA',
+        'berkshire hathaway': 'BRK-A',
+        'visa': 'V',
+        'johnson & johnson': 'JNJ',
+        'walmart': 'WMT',
+        'procter & gamble': 'PG',
+        'mastercard': 'MA',
+        'unitedhealth': 'UNH',
+        'home depot': 'HD',
+        'jpmorgan chase': 'JPM',
+        'coca-cola': 'KO',
+        'pepsico': 'PEP',
+        'disney': 'DIS',
+        'verizon': 'VZ',
+        'at&t': 'T',
+        'intel': 'INTC',
+        'cisco': 'CSCO',
+        'pfizer': 'PFE',
+        'merck': 'MRK',
+        'abbott': 'ABT',
+        'salesforce': 'CRM',
+        'oracle': 'ORCL',
+        'adobe': 'ADBE',
+        'broadcom': 'AVGO',
+        'comcast': 'CMCSA',
+        'thermo fisher': 'TMO',
+        'accenture': 'ACN',
+        'danaher': 'DHR',
+        'mcdonald\'s': 'MCD',
+        'costco': 'COST',
+        'nextera energy': 'NEE',
+        
+        # Indian Companies (NSE)
+        'tata consultancy services': 'TCS.NS',
+        'tcs': 'TCS.NS',
+        'reliance industries': 'RELIANCE.NS',
+        'reliance': 'RELIANCE.NS',
+        'hdfc bank': 'HDFCBANK.NS',
+        'icici bank': 'ICICIBANK.NS',
+        'infosys': 'INFY.NS',
+        'hindustan unilever': 'HINDUNILVR.NS',
+        'hul': 'HINDUNILVR.NS',
+        'itc': 'ITC.NS',
+        'state bank of india': 'SBIN.NS',
+        'sbi': 'SBIN.NS',
+        'bharti airtel': 'BHARTIARTL.NS',
+        'airtel': 'BHARTIARTL.NS',
+        'kotak mahindra bank': 'KOTAKBANK.NS',
+        'kotak bank': 'KOTAKBANK.NS',
+        'axis bank': 'AXISBANK.NS',
+        'larsen & toubro': 'LT.NS',
+        'l&t': 'LT.NS',
+        'wipro': 'WIPRO.NS',
+        'hcl technologies': 'HCLTECH.NS',
+        'hcl tech': 'HCLTECH.NS',
+        'bajaj finance': 'BAJFINANCE.NS',
+        'maruti suzuki': 'MARUTI.NS',
+        'maruti': 'MARUTI.NS',
+        'asian paints': 'ASIANPAINT.NS',
+        'tata steel': 'TATASTEEL.NS',
+        'sun pharma': 'SUNPHARMA.NS',
+        'sun pharmaceutical': 'SUNPHARMA.NS',
+        'ntpc': 'NTPC.NS',
+        'powergrid': 'POWERGRID.NS',
+        'power grid corporation': 'POWERGRID.NS',
+        'ultratech cement': 'ULTRACEMCO.NS',
+        'ultratech': 'ULTRACEMCO.NS',
+        'ongc': 'ONGC.NS',
+        'oil and natural gas corporation': 'ONGC.NS',
+        'bajaj finserv': 'BAJAJFINSV.NS',
+        'tech mahindra': 'TECHM.NS',
+        'dr reddy': 'DRREDDY.NS',
+        'dr reddys': 'DRREDDY.NS',
+        'titan company': 'TITAN.NS',
+        'titan': 'TITAN.NS',
+        'nestle india': 'NESTLEIND.NS',
+        'nestle': 'NESTLEIND.NS',
+        'hero motocorp': 'HEROMOTOCO.NS',
+        'hero': 'HEROMOTOCO.NS',
+        'adani enterprises': 'ADANIENT.NS',
+        'adani': 'ADANIENT.NS',
+        'indusind bank': 'INDUSINDBK.NS',
+        'mahindra & mahindra': 'M&M.NS',
+        'mahindra': 'M&M.NS',
+        'tata motors': 'TATAMOTORS.NS',
+        'coal india': 'COALINDIA.NS',
+        'grasim industries': 'GRASIM.NS',
+        'grasim': 'GRASIM.NS',
+        'britannia industries': 'BRITANNIA.NS',
+        'britannia': 'BRITANNIA.NS',
+        'shree cement': 'SHREECEM.NS',
+        'divislab': 'DIVISLAB.NS',
+        'divis laboratories': 'DIVISLAB.NS',
+        'eicher motors': 'EICHERMOT.NS',
+        'eicher': 'EICHERMOT.NS',
+        'sbi life': 'SBILIFE.NS',
+        'sbi life insurance': 'SBILIFE.NS',
+        'hdfc life': 'HDFCLIFE.NS',
+        'hdfc life insurance': 'HDFCLIFE.NS',
+        'icici lombard': 'ICICIGI.NS',
+        'icici prudential': 'ICICIPRULI.NS',
+        'bajaj auto': 'BAJAJ-AUTO.NS',
+        'cipla': 'CIPLA.NS',
+        'tata consumer products': 'TATACONSUM.NS',
+        'tata consumer': 'TATACONSUM.NS',
+        
+        # Indian ADRs trading on US exchanges (for users who prefer USD trading)
+        'hdfc bank adr': 'HDB',
+        'infosys adr': 'INFY',
+        'tata motors adr': 'TTM',
+        'wipro adr': 'WIT',
+        'icici bank adr': 'IBN',
+        'dr reddys adr': 'RDY',
+    }
+    
+    # First, try direct lookup (case-insensitive)
+    name_lower = company_name.lower().strip()
+    if name_lower in COMMON_STOCKS:
+        return COMMON_STOCKS[name_lower]
+    
+    # If not found in mapping, use yahooquery search
     try:
         results = search(company_name)
         quotes = results.get('quotes', [])
@@ -110,6 +329,9 @@ def get_detailed_stock_info(symbol: str) -> dict:
     try:
         t = Ticker(symbol)
         
+        # Determine market and currency
+        market_info = _get_market_info(symbol)
+        
         # Get different data modules
         key_stats = t.key_stats.get(symbol, {})
         financial_data = t.financial_data.get(symbol, {})
@@ -121,6 +343,8 @@ def get_detailed_stock_info(symbol: str) -> dict:
         info = {
             'symbol': symbol,
             'company_name': price_info.get('shortName', 'N/A'),
+            'market': market_info['market'],
+            'currency': market_info['currency'],
             'sector': profile.get('sector', 'N/A'),
             'industry': profile.get('industry', 'N/A'),
             'current_price': summary_detail.get('regularMarketPrice', summary_detail.get('previousClose', 'N/A')),
@@ -146,13 +370,17 @@ def get_detailed_stock_info(symbol: str) -> dict:
         formatted_info = f"""
 Stock Analysis for {info['company_name']} ({symbol}):
 
+Market Information:
+- Exchange: {market_info['market']}
+- Currency: {market_info['currency']}
+
 Company Details:
 - Sector: {info['sector']}
 - Industry: {info['industry']}
-- Current Price: ${info['current_price']} 
+- Current Price: {market_info['currency_symbol']}{info['current_price']} 
 - Market Cap: {_format_large_number(info['market_cap'])}
 - Enterprise Value: {_format_large_number(info['enterprise_value'])}
-- 52-Week Range: ${info['52_week_low']} - ${info['52_week_high']}
+- 52-Week Range: {market_info['currency_symbol']}{info['52_week_low']} - {market_info['currency_symbol']}{info['52_week_high']}
 
 Key Financial Metrics:
 - ROE (Return on Equity): {_format_percentage(info['roe'])}
