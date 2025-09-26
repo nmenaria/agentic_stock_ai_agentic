@@ -47,15 +47,15 @@ def process_query(query):
     if not company_name:
         return "❌ Could not identify company name in your query. Please try: 'Analyze Apple' or 'Screen Microsoft'"
     
-    print(f"🔍 Processing query for: {company_name}")
+        print(f"Processing query for: {company_name}")
     
     # Determine action type
     if any(word in query_lower for word in ['screen', 'check threshold', 'add to watchlist', 'criteria']):
-        print("📊 Using screening analysis with thresholds...")
+        print("Using screening analysis with thresholds...")
         return tools.screen_and_add(company_name)
     
     elif any(word in query_lower for word in ['analyze', 'analysis', 'details', 'info', 'comprehensive']):
-        print("📈 Using comprehensive analysis...")
+        print("Using comprehensive analysis...")
         return tools.analyze_stock(company_name)
     
     else:
@@ -72,7 +72,7 @@ def process_watchlist_query(query):
         if not watchlist:
             return "📋 Your watchlist is empty."
         
-        result = f"📊 Your Watchlist ({len(watchlist)} stocks):\n\n"
+        result = f"Your Watchlist ({len(watchlist)} stocks):\n\n"
         for symbol in watchlist:
             details = tools.get_detailed_stock_info(symbol)
             if 'error' not in details:
@@ -80,7 +80,7 @@ def process_watchlist_query(query):
                 lines = details['formatted_info'].split('\n')[:8]
                 result += '\n'.join(lines) + '\n\n' + '='*50 + '\n\n'
             else:
-                result += f"❌ Error loading {symbol}: {details.get('error', 'Unknown error')}\n\n"
+                result += f"ERROR loading {symbol}: {details.get('error', 'Unknown error')}\n\n"
         return result
     
     elif 'clear' in query_lower:
@@ -117,7 +117,7 @@ def smart_stock_query(user_input):
     
     if 'threshold' in query.lower() and ('show' in query.lower() or 'get' in query.lower()):
         thresholds = tools.get_thresholds()
-        return f"📊 Current Thresholds: ROE > {thresholds.get('roe', 15)}%, PEG < {thresholds.get('peg', 2)}"
+        return f"Current Thresholds: ROE > {thresholds.get('roe', 15)}%, PEG < {thresholds.get('peg', 2)}"
     
     # Process stock analysis queries
     return process_query(query)
@@ -141,10 +141,10 @@ if __name__ == "__main__":
                 break
                 
             result = smart_stock_query(user_input)
-            print(f"\n📊 Result:\n{result}")
+            print(f"\nResult:\n{result}")
             
         except KeyboardInterrupt:
             print("\n👋 Goodbye!")
             break
         except Exception as e:
-            print(f"\n❌ Error: {e}")
+            print(f"\nError: {e}")

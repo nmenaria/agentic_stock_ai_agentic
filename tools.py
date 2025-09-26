@@ -239,6 +239,10 @@ def get_symbol(company_name: str) -> str:
         'maruti': 'MARUTI.NS',
         'asian paints': 'ASIANPAINT.NS',
         'tata steel': 'TATASTEEL.NS',
+        'tata motors': 'TATAMOTORS.NS',
+        'tata motor': 'TATAMOTORS.NS',
+        'tatamotors': 'TATAMOTORS.NS',
+        'tatamotor': 'TATAMOTORS.NS',
         'sun pharma': 'SUNPHARMA.NS',
         'sun pharmaceutical': 'SUNPHARMA.NS',
         'ntpc': 'NTPC.NS',
@@ -263,7 +267,6 @@ def get_symbol(company_name: str) -> str:
         'indusind bank': 'INDUSINDBK.NS',
         'mahindra & mahindra': 'M&M.NS',
         'mahindra': 'M&M.NS',
-        'tata motors': 'TATAMOTORS.NS',
         'coal india': 'COALINDIA.NS',
         'grasim industries': 'GRASIM.NS',
         'grasim': 'GRASIM.NS',
@@ -298,6 +301,19 @@ def get_symbol(company_name: str) -> str:
     name_lower = company_name.lower().strip()
     if name_lower in COMMON_STOCKS:
         return COMMON_STOCKS[name_lower]
+    
+    # Try to handle some common variations and abbreviations
+    name_variations = [
+        name_lower.replace(' limited', '').replace(' ltd', '').strip(),
+        name_lower.replace(' inc', '').replace(' corp', '').replace(' corporation', '').strip(),
+        name_lower.replace(' company', '').replace(' co', '').strip(),
+        name_lower.replace('&', 'and').strip(),
+        name_lower.replace(' and ', ' & ').strip()
+    ]
+    
+    for variation in name_variations:
+        if variation in COMMON_STOCKS:
+            return COMMON_STOCKS[variation]
     
     # If not found in mapping, use yahooquery search
     try:
@@ -541,7 +557,7 @@ def analyze_stock(company_name: str):
             return f"Error fetching detailed information: {detailed_info['error']}"
 
         result = detailed_info['formatted_info']
-        result += f"\n\n📊 This is a comprehensive analysis without threshold screening."
+        result += f"\n\nNOTE: This is a comprehensive analysis without threshold screening."
         result += f"\nUse 'Screen and Add' if you want to check against thresholds and potentially add to watchlist."
         
         return result
