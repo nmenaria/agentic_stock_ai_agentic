@@ -93,7 +93,11 @@ def screen_and_add(company_name: str):
 
         thresholds = get_thresholds()
         roe_thr, peg_thr = thresholds.get("roe", 15), thresholds.get("peg", 2)
-        roe = (fundamentals.get('roe') or 0) * 100
+        roe = fundamentals.get('roe') or 0
+        if roe is not None:
+            roe = roe * 100  # Convert to percentage
+        else:
+            roe = 0
         peg = fundamentals.get('peg') or float('inf')
 
         if roe > roe_thr and peg < peg_thr:

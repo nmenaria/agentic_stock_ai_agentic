@@ -1,7 +1,21 @@
 # streamlit_app.py
 import streamlit as st
-from agentic_app import agent
+import os
 from tools import show_watchlist, get_thresholds, set_thresholds
+
+# Check for API key before importing agent
+if not os.environ.get("GEMINI_API_KEY") and not st.secrets.get("GEMINI_API_KEY", None):
+    st.error("⚠️ GEMINI_API_KEY not found!")
+    st.info("Please set your Gemini API key in one of these ways:")
+    st.code("1. Environment variable: set GEMINI_API_KEY=your_key")
+    st.code("2. Streamlit secrets: Add GEMINI_API_KEY to .streamlit/secrets.toml")
+    st.stop()
+
+try:
+    from agentic_app import agent
+except Exception as e:
+    st.error(f"Error loading agent: {e}")
+    st.stop()
 
 st.title("Agentic Stock Watchlist App (Gemini)")
 
@@ -20,8 +34,14 @@ user_query = st.text_area(
 )
 
 if st.button("Run Agent"):
-    result = agent.run(user_query)
-    st.write(result)
+    with st.spinner("Running agent..."):
+        try:
+            result = agent.run(user_query)
+            st.success("✅ Agent completed successfully!")
+            st.write(result)
+        except Exception as e:
+            st.error(f"❌ Agent error: {e}")
+            st.write("Please check your API key and try again.")
 
 st.subheader("Current Persistent Watchlist")
 st.write(show_watchlist())
