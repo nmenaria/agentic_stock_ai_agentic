@@ -49,5 +49,49 @@ if st.button("Run Agent"):
             st.error(f"❌ Agent error: {e}")
             st.write("Please check your API key and try again.")
 
-st.subheader("Current Persistent Watchlist")
-st.write(show_watchlist())
+st.subheader("📊 Current Persistent Watchlist")
+watchlist = show_watchlist()
+
+if not watchlist:
+    st.info("📋 Watchlist is empty. Use the agent to screen and add stocks!")
+else:
+    st.success(f"📈 {len(watchlist)} stocks in watchlist")
+    
+    # Import get_detailed_stock_info here to avoid circular imports
+    from tools import get_detailed_stock_info
+    
+    # Display each stock with detailed information
+    for i, symbol in enumerate(watchlist):
+        with st.expander(f"📊 {symbol} - Click to view details", expanded=False):
+            with st.spinner(f"Loading details for {symbol}..."):
+                try:
+                    details = get_detailed_stock_info(symbol)
+                    if 'error' in details:
+                        st.error(f"❌ Error loading {symbol}: {details['error']}")
+                    else:
+                        # Display the formatted information
+                        st.markdown(details['formatted_info'])
+                        
+                        # Add remove button for each stock
+                        if st.button(f"🗑️ Remove {symbol} from watchlist", key=f"remove_{symbol}_{i}"):
+                            # We'll need to add a remove function
+                            from tools import remove_from_watchlist
+                            result = remove_from_watchlist(symbol)
+                            st.success(result)
+                            st.rerun()  # Refresh the page
+                            
+                except Exception as e:
+                    st.error(f"❌ Failed to load details for {symbol}: {e}")
+    
+    # Add bulk actions
+    st.markdown("---")
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("🔄 Refresh All Details"):
+            st.rerun()
+    with col2:
+        if st.button("🗑️ Clear Entire Watchlist"):
+            from tools import clear_watchlist
+            result = clear_watchlist()
+            st.success(result)
+            st.rerun()

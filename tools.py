@@ -39,6 +39,26 @@ def add_to_watchlist(symbol: str):
     except Exception as e:
         return f"Error adding {symbol} to watchlist: {e}"
 
+def remove_from_watchlist(symbol: str):
+    """Remove a stock symbol from the watchlist"""
+    try:
+        watchlist = _load_watchlist()
+        if symbol in watchlist:
+            watchlist.remove(symbol)
+            _save_watchlist(watchlist)
+            return f"{symbol} removed from watchlist."
+        return f"{symbol} not found in watchlist."
+    except Exception as e:
+        return f"Error removing {symbol} from watchlist: {e}"
+
+def clear_watchlist():
+    """Clear all stocks from the watchlist"""
+    try:
+        _save_watchlist([])
+        return "Watchlist cleared successfully."
+    except Exception as e:
+        return f"Error clearing watchlist: {e}"
+
 def show_watchlist() -> list:
     try:
         return _load_watchlist()

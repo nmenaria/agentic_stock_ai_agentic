@@ -147,6 +147,16 @@ tools_list = [
         description="Add a stock symbol to the watchlist."
     ),
     Tool(
+        name="Remove from Watchlist",
+        func=tools.remove_from_watchlist,
+        description="Remove a stock symbol from the watchlist."
+    ),
+    Tool(
+        name="Clear Watchlist",
+        func=lambda _: tools.clear_watchlist(),
+        description="Clear all stocks from the watchlist."
+    ),
+    Tool(
         name="Show Watchlist",
         func=lambda _: tools.show_watchlist(),
         description="Show the current watchlist."
