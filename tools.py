@@ -250,8 +250,21 @@ def screen_and_add(company_name: str):
         
         # Check if stock meets criteria
         meets_roe = roe_pct > roe_thr if roe is not None else False
-        meets_peg = peg_val < peg_thr if peg is not None and peg_val != float('inf') else False
-        meets_criteria = meets_roe and meets_peg
+        
+        # Handle PEG more intelligently - if PEG is not available, don't penalize the stock
+        if peg is not None and peg_val != float('inf'):
+            meets_peg = peg_val < peg_thr
+            peg_available = True
+        else:
+            meets_peg = True  # Don't penalize for missing PEG data
+            peg_available = False
+        
+        # If both ROE and PEG are available, both must pass
+        # If only ROE is available, just ROE needs to pass
+        if peg_available:
+            meets_criteria = meets_roe and meets_peg
+        else:
+            meets_criteria = meets_roe  # Only require ROE if PEG is not available
         
         # Build the analysis result
         result = detailed_info['formatted_info']
@@ -260,7 +273,11 @@ def screen_and_add(company_name: str):
         result += f"\n\nThreshold Analysis:"
         result += f"\n- Current Thresholds: ROE > {roe_thr}%, PEG < {peg_thr}"
         result += f"\n- ROE Check: {_format_percentage(roe)} {'✅ PASS' if meets_roe else '❌ FAIL'} (threshold: >{roe_thr}%)"
-        result += f"\n- PEG Check: {_format_number(peg)} {'✅ PASS' if meets_peg else '❌ FAIL'} (threshold: <{peg_thr})"
+        
+        if peg_available:
+            result += f"\n- PEG Check: {_format_number(peg)} {'✅ PASS' if meets_peg else '❌ FAIL'} (threshold: <{peg_thr})"
+        else:
+            result += f"\n- PEG Check: {_format_number(peg)} ⚠️ DATA NOT AVAILABLE (threshold: <{peg_thr}) - Not penalized"
         
         # Add to watchlist if meets criteria
         if meets_criteria:
@@ -272,8 +289,10 @@ def screen_and_add(company_name: str):
             result += f"\nReasons: "
             if not meets_roe:
                 result += f"ROE too low ({_format_percentage(roe)} <= {roe_thr}%) "
-            if not meets_peg:
+            if peg_available and not meets_peg:
                 result += f"PEG too high ({_format_number(peg)} >= {peg_thr}) "
+            if not peg_available and not meets_roe:
+                result += f"(PEG data unavailable, evaluated on ROE only)"
 
         return result
 
