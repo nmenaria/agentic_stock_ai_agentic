@@ -129,7 +129,17 @@ tools_list = [
     Tool(
         name="Get Fundamentals", 
         func=tools.get_fundamentals,
-        description="Fetch ROE and PEG for a given stock ticker symbol."
+        description="Fetch basic ROE and PEG for a given stock ticker symbol."
+    ),
+    Tool(
+        name="Get Detailed Stock Info",
+        func=tools.get_detailed_stock_info,
+        description="Get comprehensive stock information including fundamentals, price, company details, and financial metrics."
+    ),
+    Tool(
+        name="Analyze Stock",
+        func=tools.analyze_stock,
+        description="Provide comprehensive stock analysis for a company without threshold screening."
     ),
     Tool(
         name="Add to Watchlist",
@@ -154,7 +164,7 @@ tools_list = [
     Tool(
         name="Screen and Add",
         func=tools.screen_and_add,
-        description="Screen a company name against thresholds and add to watchlist if it passes."
+        description="Screen a company against thresholds with detailed analysis and add to watchlist if it passes criteria. Always provides comprehensive stock information."
     ),
 ]
 

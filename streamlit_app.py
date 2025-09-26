@@ -29,8 +29,14 @@ if st.button("Update Thresholds"):
 
 st.subheader("Ask the Agent")
 user_query = st.text_area(
-    "Example: 'Screen Tesla and Apple automatically and then show watchlist.'",
-    "Screen Tesla and Apple automatically and then show watchlist."
+    "Example queries:",
+    "Screen Tesla and Apple automatically with detailed analysis and then show watchlist.",
+    help="""Try these example queries:
+    • 'Analyze Microsoft in detail' (comprehensive analysis without screening)
+    • 'Screen Apple Inc with full details' (screening with threshold analysis)
+    • 'Get detailed info for TSLA' (direct stock information lookup)
+    • 'Screen Amazon and Google, then show watchlist'
+    """
 )
 
 if st.button("Run Agent"):
