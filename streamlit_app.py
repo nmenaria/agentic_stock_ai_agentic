@@ -27,27 +27,61 @@ if st.button("Update Thresholds"):
     set_thresholds(roe_input, peg_input)
     st.success("Thresholds updated!")
 
-st.subheader("Ask the Agent")
-user_query = st.text_area(
-    "Example queries:",
-    "Screen Tesla and Apple automatically with detailed analysis and then show watchlist.",
-    help="""Try these example queries:
-    • 'Analyze Microsoft in detail' (comprehensive analysis without screening)
-    • 'Screen Apple Inc with full details' (screening with threshold analysis)
-    • 'Get detailed info for TSLA' (direct stock information lookup)
-    • 'Screen Amazon and Google, then show watchlist'
-    """
-)
+st.subheader("🤖 Stock Analysis")
 
-if st.button("Run Agent"):
-    with st.spinner("Running agent..."):
-        try:
-            result = agent.run(user_query)
-            st.success("✅ Agent completed successfully!")
-            st.write(result)
-        except Exception as e:
-            st.error(f"❌ Agent error: {e}")
-            st.write("Please check your API key and try again.")
+# Add tabs for different analysis modes
+tab1, tab2 = st.tabs(["🎯 Direct Analysis (Reliable)", "🤖 AI Agent (Experimental)"])
+
+with tab1:
+    st.info("💡 This mode uses direct tools to ensure you always get real Yahoo Finance data")
+    
+    user_query_direct = st.text_area(
+        "Enter your query:",
+        "Analyze Infosys with detailed information",
+        help="""Try these queries:
+        • 'Analyze Microsoft' - Comprehensive analysis
+        • 'Screen Apple' - Analysis with threshold check  
+        • 'Show watchlist' - View watchlist with details
+        • 'Set thresholds ROE 20 PEG 1.5' - Update criteria
+        """,
+        key="direct_query"
+    )
+
+    if st.button("🚀 Run Direct Analysis", key="run_direct"):
+        with st.spinner("Getting real stock data..."):
+            try:
+                from direct_stock_analyzer import smart_stock_query
+                result = smart_stock_query(user_query_direct)
+                st.success("✅ Analysis completed!")
+                st.markdown(f"```\n{result}\n```")
+            except Exception as e:
+                st.error(f"❌ Error: {e}")
+
+with tab2:
+    st.warning("⚠️ The AI agent sometimes generates fictional data instead of using real tools. Use 'Direct Analysis' for reliable results.")
+    
+    user_query_agent = st.text_area(
+        "Ask the Agent:",
+        "Screen Tesla and Apple automatically with detailed analysis and then show watchlist.",
+        help="""Try these example queries:
+        • 'Analyze Microsoft in detail' (comprehensive analysis without screening)
+        • 'Screen Apple Inc with full details' (screening with threshold analysis)
+        • 'Get detailed info for TSLA' (direct stock information lookup)
+        • 'Screen Amazon and Google, then show watchlist'
+        """,
+        key="agent_query"
+    )
+
+    if st.button("🤖 Run Agent", key="run_agent"):
+        with st.spinner("Running agent..."):
+            try:
+                result = agent.run(user_query_agent)
+                st.success("✅ Agent completed successfully!")
+                st.write(result)
+            except Exception as e:
+                st.error(f"❌ Agent error: {e}")
+                st.write("Please check your API key and try again.")
+                st.info("💡 Try using the 'Direct Analysis' tab for more reliable results.")
 
 st.subheader("📊 Current Persistent Watchlist")
 watchlist = show_watchlist()

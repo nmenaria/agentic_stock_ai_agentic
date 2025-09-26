@@ -124,57 +124,57 @@ tools_list = [
     Tool(
         name="Get Symbol",
         func=tools.get_symbol,
-        description="Find a stock ticker symbol from a company name."
+        description="Find a stock ticker symbol from a company name. Returns the actual ticker symbol string."
     ),
     Tool(
         name="Get Fundamentals", 
         func=tools.get_fundamentals,
-        description="Fetch basic ROE and PEG for a given stock ticker symbol."
+        description="Fetch basic ROE and PEG for a given stock ticker symbol. Returns actual financial data from Yahoo Finance."
     ),
     Tool(
         name="Get Detailed Stock Info",
         func=tools.get_detailed_stock_info,
-        description="Get comprehensive stock information including fundamentals, price, company details, and financial metrics."
+        description="Get comprehensive stock information including fundamentals, price, company details, and financial metrics. Returns real Yahoo Finance data in formatted text."
     ),
     Tool(
         name="Analyze Stock",
         func=tools.analyze_stock,
-        description="Provide comprehensive stock analysis for a company without threshold screening."
+        description="Provide comprehensive stock analysis for a company without threshold screening. Uses real Yahoo Finance data and returns formatted analysis text. ALWAYS use this for detailed stock analysis."
     ),
     Tool(
         name="Add to Watchlist",
         func=tools.add_to_watchlist,
-        description="Add a stock symbol to the watchlist."
+        description="Add a stock symbol to the watchlist. Takes a ticker symbol and adds it to persistent storage."
     ),
     Tool(
         name="Remove from Watchlist",
         func=tools.remove_from_watchlist,
-        description="Remove a stock symbol from the watchlist."
+        description="Remove a stock symbol from the watchlist. Takes a ticker symbol and removes it from persistent storage."
     ),
     Tool(
         name="Clear Watchlist",
         func=lambda _: tools.clear_watchlist(),
-        description="Clear all stocks from the watchlist."
+        description="Clear all stocks from the watchlist. No input required."
     ),
     Tool(
         name="Show Watchlist",
         func=lambda _: tools.show_watchlist(),
-        description="Show the current watchlist."
+        description="Show the current watchlist symbols. Returns list of ticker symbols. No input required."
     ),
     Tool(
         name="Get Thresholds",
         func=lambda _: tools.get_thresholds(),
-        description="Show the current screening thresholds (ROE and PEG)."
+        description="Show the current screening thresholds (ROE and PEG). No input required."
     ),
     Tool(
         name="Set Thresholds",
         func=safe_set_thresholds,
-        description="Update thresholds. Input format: 'ROE,PEG' (e.g. '20,1.5') or 'ROE PEG'"
+        description="Update thresholds. Input format: 'ROE,PEG' (e.g. '20,1.5') or 'ROE PEG'. Updates persistent threshold settings."
     ),
     Tool(
         name="Screen and Add",
         func=tools.screen_and_add,
-        description="Screen a company against thresholds with detailed analysis and add to watchlist if it passes criteria. Always provides comprehensive stock information."
+        description="Screen a company against thresholds with detailed analysis and add to watchlist if it passes criteria. Always provides comprehensive real stock information from Yahoo Finance. Use company name as input."
     ),
 ]
 
@@ -186,6 +186,7 @@ agent = initialize_agent(
     verbose=True,
     max_iterations=MAX_ITERATIONS,
     handle_parsing_errors=True,
+    early_stopping_method="generate",  # Stop early if tool calls fail
 )
 
 # --- Streamlit UI ---
